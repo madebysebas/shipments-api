@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ShipmentStatus {
+  CREATED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+model Shipment {
+  id          String          @id @default(uuid())
+  reference   String          @unique
+  origin      String
+  destination String
+  status      ShipmentStatus  @default(CREATED)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  events      ShipmentEvent[]
+
+  @@index([status, createdAt])
+}
+
+model ShipmentEvent {
+  id         String         @id @default(uuid())
+  shipmentId String
+  shipment   Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status     ShipmentStatus
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  @@index([shipmentId, createdAt])
+}
